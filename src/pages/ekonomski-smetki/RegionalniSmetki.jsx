@@ -1,41 +1,44 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Typography, Box, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import PropTypes from 'prop-types';
-import { useLocation } from 'react-router-dom';
 import BackButton from '../../components/navigation/BackButton';
 import DataTable from '../../components/data-display/DataTable';
 import LoadingState from '../../components/feedback/LoadingState';
 import statisticsService from '../../services/StatisticsService';
 
-const EkonomskiSmetkiDetail = ({ title }) => {
-  const location = useLocation();
+const RegionalniSmetki = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [data, setData] = useState([]);
   const [allData, setAllData] = useState([]);
-  const [columns, setColumns] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
   const [years, setYears] = useState([]);
+  const [regions, setRegions] = useState([]);
   const [selectedYear, setSelectedYear] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState('');
+
+  // Define columns statically to ensure they're always in the correct order
+  const columns = [
+    { field: 'item', headerName: 'Ставка', numeric: false },
+    { field: 'region', headerName: 'Регион', numeric: false },
+    { field: 'year', headerName: 'Година', numeric: true },
+    { field: 'value', headerName: 'Вредност', numeric: true }
+  ];
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Determine which endpoint to use based on the current route
-      const isTekovniCeni = location.pathname.includes('tekovni-ceni');
-      const response = isTekovniCeni 
-        ? await statisticsService.getEkonomskiSmetkiTekovni()
-        : await statisticsService.getEkonomskiSmetkiPostojani();
+      const response = await statisticsService.getEkonomskiSmetkiRegionalni();
 
       if (response) {
-        setColumns(response.columns);
         setAllData(response.data);
         setYears(response.years);
+        setRegions(response.regions);
         setSelectedYear(response.years[0]); // Select the most recent year by default
+        setSelectedRegion(response.regions[0]); // Select the first region by default
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -43,21 +46,24 @@ const EkonomskiSmetkiDetail = ({ title }) => {
     } finally {
       setLoading(false);
     }
-  }, [location.pathname]);
+  }, []);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Filter data by selected year
+  // Filter data by selected year and region
   useEffect(() => {
-    if (selectedYear && allData.length > 0) {
-      const filteredData = allData.filter(item => item.year === selectedYear);
+    if (selectedYear && selectedRegion && allData.length > 0) {
+      const filteredData = allData.filter(item => 
+        item.year === selectedYear && 
+        item.region === selectedRegion
+      );
       setData(filteredData);
       setTotalRows(filteredData.length);
-      setPage(0); // Reset to first page when changing year
+      setPage(0); // Reset to first page when changing filters
     }
-  }, [selectedYear, allData]);
+  }, [selectedYear, selectedRegion, allData]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -70,6 +76,10 @@ const EkonomskiSmetkiDetail = ({ title }) => {
 
   const handleYearChange = (event) => {
     setSelectedYear(event.target.value);
+  };
+
+  const handleRegionChange = (event) => {
+    setSelectedRegion(event.target.value);
   };
 
   const paginatedData = useMemo(() => {
@@ -90,33 +100,47 @@ const EkonomskiSmetkiDetail = ({ title }) => {
           mb: 4
         }}
       >
-        {title}
+        Регионални сметки во земјоделството
       </Typography>
       
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between',
         alignItems: 'center',
-        mb: 3 
+        mb: 3,
+        gap: 2
       }}>
-        <FormControl 
-          sx={{ 
-            minWidth: 200
-          }}
-        >
-          <InputLabel id="year-select-label">Период</InputLabel>
-          <Select
-            labelId="year-select-label"
-            id="year-select"
-            value={selectedYear}
-            label="Период"
-            onChange={handleYearChange}
-          >
-            {years.map((year) => (
-              <MenuItem key={year} value={year}>{year}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel id="year-select-label">Период</InputLabel>
+            <Select
+              labelId="year-select-label"
+              id="year-select"
+              value={selectedYear}
+              label="Период"
+              onChange={handleYearChange}
+            >
+              {years.map((year) => (
+                <MenuItem key={year} value={year}>{year}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel id="region-select-label">Регион</InputLabel>
+            <Select
+              labelId="region-select-label"
+              id="region-select"
+              value={selectedRegion}
+              label="Регион"
+              onChange={handleRegionChange}
+            >
+              {regions.map((region) => (
+                <MenuItem key={region} value={region}>{region}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
         <BackButton />
       </Box>
 
@@ -140,8 +164,4 @@ const EkonomskiSmetkiDetail = ({ title }) => {
   );
 };
 
-EkonomskiSmetkiDetail.propTypes = {
-  title: PropTypes.string.isRequired,
-};
-
-export default EkonomskiSmetkiDetail; 
+export default RegionalniSmetki; 

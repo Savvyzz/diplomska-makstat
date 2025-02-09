@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import DelovniTendencii from './pages/delovni-tendencii';
 import EkonomskiSmetki from './pages/ekonomski-smetki';
 import EkonomskiSmetkiDetail from './pages/ekonomski-smetki/Detail';
+import RegionalniSmetki from './pages/ekonomski-smetki/RegionalniSmetki';
 import ZdravstveniSmetki from './pages/zdravstveni-smetki';
 import ZdravstveniSmetkiDetail from './pages/zdravstveni-smetki/Detail';
 import PoloviStatistiki from './pages/polovi-statistiki';
@@ -56,7 +57,7 @@ function App() {
             />
             <Route 
               path="/ekonomski-smetki/regionalni-smetki" 
-              element={<EkonomskiSmetkiDetail title="Регионални сметки во земјоделството" />} 
+              element={<RegionalniSmetki />} 
             />
             <Route path="/zdravstveni-smetki" element={<ZdravstveniSmetki />} />
             <Route 
