@@ -49,6 +49,13 @@ const DataTable = ({
     setOrderBy(property);
   };
 
+  const handleChangeRowsPerPage = (event) => {
+    const newRowsPerPage = parseInt(event.target.value, 10);
+    const newPage = Math.floor((page * rowsPerPage) / newRowsPerPage);
+    onRowsPerPageChange(event);
+    onPageChange(null, newPage);
+  };
+
   const sortData = (data) => {
     if (!orderBy) return data;
 
@@ -213,7 +220,7 @@ const DataTable = ({
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={onPageChange}
-        onRowsPerPageChange={onRowsPerPageChange}
+        onRowsPerPageChange={handleChangeRowsPerPage}
         labelRowsPerPage="Редови по страница:"
         labelDisplayedRows={({ from, to, count }) => 
           `${from}–${to} од ${count !== -1 ? count : `повеќе од ${to}`}`

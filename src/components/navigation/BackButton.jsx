@@ -33,7 +33,7 @@ const BackButton = () => {
     <Button
       onClick={() => navigate(-1)}
       onKeyDown={handleKeyPress}
-      startIcon={<ArrowBackIcon />}
+      startIcon={<ArrowBackIcon sx={{ fontSize: 24 }} />}
       variant="outlined"
       className="back-button"
       aria-label="назад на претходна страница"
@@ -41,6 +41,8 @@ const BackButton = () => {
         mb: 3,
         borderColor: 'divider',
         color: 'text.secondary',
+        fontSize: '1.1rem',
+        padding: '8px 24px',
         '&:hover': {
           borderColor: 'primary.main',
           color: 'primary.main',

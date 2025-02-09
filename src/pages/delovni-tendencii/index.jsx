@@ -29,15 +29,14 @@ const DelovniTendencii = () => {
   const navigate = useNavigate();
 
   return (
-    <Box>
+    <Box sx={{ py: 3 }}>
       <Typography
-        variant="h3"
+        variant="h4"
         component="h1"
         sx={{
           fontWeight: 700,
           color: 'primary.main',
-          mb: 4,
-          mt: 2
+          mb: 4
         }}
       >
         Деловни тенденции

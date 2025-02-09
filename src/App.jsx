@@ -5,7 +5,6 @@ import { useTheme } from './hooks/useTheme';
 import MainLayout from './layouts/MainLayout';
 import Home from './pages/Home';
 import DelovniTendencii from './pages/delovni-tendencii';
-import DelovniTendenciiDetail from './pages/delovni-tendencii/Detail';
 import EkonomskiSmetki from './pages/ekonomski-smetki';
 import EkonomskiSmetkiDetail from './pages/ekonomski-smetki/Detail';
 import ZdravstveniSmetki from './pages/zdravstveni-smetki';
@@ -19,6 +18,9 @@ import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
 import '@fontsource/inter/700.css';
 import './assets/styles/main.scss';
+import GradeznistvoDashboard from './pages/delovni-tendencii/gradeznistvo';
+import PrerabotuvackaIndustrijaDashboard from './pages/delovni-tendencii/prerabotuvacka-industrija';
+import TrgovijaDashboard from './pages/delovni-tendencii/trgovija';
 
 function App() {
   const theme = useTheme();
@@ -33,15 +35,15 @@ function App() {
             <Route path="/delovni-tendencii" element={<DelovniTendencii />} />
             <Route 
               path="/delovni-tendencii/gradeznistvo" 
-              element={<DelovniTendenciiDetail title="Деловни тенденции во градежништвото" />} 
+              element={<GradeznistvoDashboard />} 
             />
             <Route 
               path="/delovni-tendencii/prerabotuvacka-industrija" 
-              element={<DelovniTendenciiDetail title="Деловни тенденции во преработувачката индустрија" />} 
+              element={<PrerabotuvackaIndustrijaDashboard />} 
             />
             <Route 
               path="/delovni-tendencii/trgovija" 
-              element={<DelovniTendenciiDetail title="Деловни тенденции во трговијата на мало" />} 
+              element={<TrgovijaDashboard />} 
             />
             <Route path="/ekonomski-smetki" element={<EkonomskiSmetki />} />
             <Route 
