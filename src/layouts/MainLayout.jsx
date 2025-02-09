@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -14,6 +14,7 @@ import {
   useTheme,
   useMediaQuery,
   Divider,
+  Tooltip
 } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -47,6 +48,18 @@ const MainLayout = ({ children }) => {
     setMobileOpen(!mobileOpen);
   };
 
+  const handleKeyPress = useCallback((event, callback) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      callback();
+    }
+  }, []);
+
+  const handleMenuItemClick = (path) => {
+    navigate(path);
+    if (isMobile) handleDrawerToggle();
+  };
+
   const drawer = (
     <Box
       sx={{
@@ -56,9 +69,16 @@ const MainLayout = ({ children }) => {
         bgcolor: 'background.paper'
       }}
       role="navigation"
-      aria-label="main navigation"
+      aria-label="главна навигација"
     >
-      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <Box 
+        sx={{ 
+          p: 2, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between' 
+        }}
+      >
         <Typography
           variant="h6"
           component="div"
@@ -70,9 +90,20 @@ const MainLayout = ({ children }) => {
           MAKSTAT
         </Typography>
         {isMobile && (
-          <IconButton onClick={handleDrawerToggle} aria-label="close menu">
-            <ChevronLeftIcon />
-          </IconButton>
+          <Tooltip title="Затвори мени">
+            <IconButton 
+              onClick={handleDrawerToggle} 
+              aria-label="затвори мени"
+              sx={{
+                '&:focus-visible': {
+                  outline: `2px solid ${theme.palette.primary.main}`,
+                  outlineOffset: 2,
+                },
+              }}
+            >
+              <ChevronLeftIcon />
+            </IconButton>
+          </Tooltip>
         )}
       </Box>
       <Divider />
@@ -80,10 +111,7 @@ const MainLayout = ({ children }) => {
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
             <ListItemButton
-              onClick={() => {
-                navigate(item.path);
-                if (isMobile) handleDrawerToggle();
-              }}
+              onClick={() => handleMenuItemClick(item.path)}
               selected={location.pathname === item.path}
               sx={{
                 '&.Mui-selected': {
@@ -92,9 +120,21 @@ const MainLayout = ({ children }) => {
                     bgcolor: 'primary.light',
                   },
                 },
+                '&:focus-visible': {
+                  outline: `2px solid ${theme.palette.primary.main}`,
+                  outlineOffset: -2,
+                },
               }}
+              role="link"
+              aria-current={location.pathname === item.path ? 'page' : undefined}
+              onKeyDown={(e) => handleKeyPress(e, () => handleMenuItemClick(item.path))}
             >
-              <ListItemIcon sx={{ color: location.pathname === item.path ? 'primary.main' : 'inherit' }}>
+              <ListItemIcon 
+                sx={{ 
+                  color: location.pathname === item.path ? 'primary.main' : 'inherit',
+                  minWidth: 40,
+                }}
+              >
                 {item.icon}
               </ListItemIcon>
               <ListItemText 
@@ -113,15 +153,26 @@ const MainLayout = ({ children }) => {
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       {isMobile && (
-        <IconButton
-          color="inherit"
-          aria-label="open menu"
-          edge="start"
-          onClick={handleDrawerToggle}
-          sx={{ position: 'fixed', left: 16, top: 16, zIndex: 1200 }}
-        >
-          <MenuIcon />
-        </IconButton>
+        <Tooltip title="Отвори мени">
+          <IconButton
+            color="inherit"
+            aria-label="отвори мени"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ 
+              position: 'fixed', 
+              left: 16, 
+              top: 16, 
+              zIndex: 1200,
+              '&:focus-visible': {
+                outline: `2px solid ${theme.palette.primary.main}`,
+                outlineOffset: 2,
+              },
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+        </Tooltip>
       )}
 
       <Box
@@ -136,7 +187,10 @@ const MainLayout = ({ children }) => {
             variant="temporary"
             open={mobileOpen}
             onClose={handleDrawerToggle}
-            ModalProps={{ keepMounted: true }}
+            ModalProps={{ 
+              keepMounted: true,
+              'aria-label': 'мени за навигација'
+            }}
             sx={{
               '& .MuiDrawer-paper': { 
                 width: drawerWidth,

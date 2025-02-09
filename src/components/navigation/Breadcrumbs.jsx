@@ -33,8 +33,19 @@ const Breadcrumbs = () => {
     return null;
   }
 
+  const handleKeyPress = (event, callback) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      callback();
+    }
+  };
+
   return (
-    <Box sx={{ mb: 3, mt: 1 }}>
+    <Box 
+      sx={{ mb: 3, mt: 1 }}
+      role="navigation"
+      aria-label="навигација за локација"
+    >
       <MuiBreadcrumbs 
         separator={<NavigateNextIcon fontSize="small" />}
         aria-label="навигација"
@@ -44,6 +55,15 @@ const Breadcrumbs = () => {
           component={RouterLink}
           to="/"
           className="breadcrumbs-link"
+          onKeyDown={(e) => handleKeyPress(e, () => {})}
+          sx={{
+            '&:focus-visible': {
+              outline: '2px solid',
+              outlineColor: 'primary.main',
+              outlineOffset: 2,
+              borderRadius: 1,
+            },
+          }}
         >
           <HomeIcon />
           Почетна
@@ -58,6 +78,7 @@ const Breadcrumbs = () => {
               color="text.primary" 
               key={to}
               className="breadcrumbs-text"
+              aria-current="page"
             >
               {name}
             </Typography>
@@ -67,6 +88,15 @@ const Breadcrumbs = () => {
               to={to}
               key={to}
               className="breadcrumbs-link"
+              onKeyDown={(e) => handleKeyPress(e, () => {})}
+              sx={{
+                '&:focus-visible': {
+                  outline: '2px solid',
+                  outlineColor: 'primary.main',
+                  outlineOffset: 2,
+                  borderRadius: 1,
+                },
+              }}
             >
               {name}
             </Link>
