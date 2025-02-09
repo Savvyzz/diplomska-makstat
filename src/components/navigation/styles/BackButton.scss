@@ -1,0 +1,10 @@
+@use '../../../assets/styles/index' as *;
+
+.back-button {
+  &:hover {
+    .MuiButton-startIcon {
+      @include transition(transform);
+      transform: translateX(-4px);
+    }
+  }
+} 

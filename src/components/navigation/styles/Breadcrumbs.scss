@@ -1,0 +1,24 @@
+@use '../../../assets/styles/index' as *;
+
+.breadcrumbs {
+  &-link {
+    @include flex-center;
+    text-decoration: none;
+    color: inherit;
+
+    &:hover {
+      @include transition(color);
+      color: var(--primary-main);
+    }
+
+    .MuiSvgIcon-root {
+      margin-right: 4px;
+      font-size: 20px;
+    }
+  }
+
+  &-text {
+    font-weight: 500;
+    @include flex-center;
+  }
+} 
