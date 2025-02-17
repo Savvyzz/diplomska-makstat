@@ -25,7 +25,7 @@ class StatisticsService extends BaseService {
     Object.entries(questions.label).forEach(([questionIndex, questionLabel]) => {
       Object.entries(periods.label).forEach(([periodIndex, periodLabel]) => {
         // Calculate the position in the values array
-        const valueIndex = parseInt(questionIndex) + (parseInt(periodIndex) * Object.keys(questions.label).length);
+        const valueIndex = parseInt(questionIndex) + parseInt(periodIndex) + (Object.keys(periods.label).length-1) * parseInt(questionIndex);
         
         const [year, month] = periodLabel.split('/');
         
@@ -75,7 +75,7 @@ class StatisticsService extends BaseService {
     Object.entries(questions.label).forEach(([questionIndex, questionLabel]) => {
       Object.entries(periods.label).forEach(([periodIndex, periodLabel]) => {
         // Calculate the position in the values array
-        const valueIndex = parseInt(questionIndex) + (parseInt(periodIndex) * Object.keys(questions.label).length);
+        const valueIndex = parseInt(questionIndex) + parseInt(periodIndex) + (Object.keys(periods.label).length-1) * parseInt(questionIndex);
         
         const [year, month] = periodLabel.split('/');
         
@@ -125,7 +125,7 @@ class StatisticsService extends BaseService {
     Object.entries(questions.index).forEach(([questionKey, questionIndex]) => {
       Object.entries(periods.index).forEach(([periodKey, periodIndex]) => {
         // Calculate the position in the values array
-        const valueIndex = parseInt(questionIndex) + (parseInt(periodIndex) * Object.keys(questions.index).length);
+        const valueIndex = parseInt(questionIndex) + parseInt(periodIndex) + (Object.keys(periods.label).length-1) * parseInt(questionIndex);
         
         const periodLabel = periods.label[periodKey];
         
@@ -179,7 +179,7 @@ class StatisticsService extends BaseService {
         category: categoryMap[item.key[0]] || item.key[0],
         categoryCode: item.key[0],
         year: item.key[1],
-        value: parseFloat(item.values[0]).toLocaleString('mk-MK')
+        value: parseFloat(item.values[0])
       }));
 
     // Get unique years for filtering
@@ -218,7 +218,7 @@ class StatisticsService extends BaseService {
     Object.entries(categories.category.index).forEach(([categoryIndex, categoryPosition]) => {
       Object.entries(years.category.index).forEach(([year, yearPosition]) => {
         // Calculate the position in the values array
-        const valueIndex = parseInt(categoryPosition) + (parseInt(yearPosition) * Object.keys(categories.category.index).length);
+        const valueIndex = parseInt(categoryPosition) + parseInt(yearPosition) + (Object.keys(years.category.index).length - 1) * parseInt(categoryPosition);
         const value = values[valueIndex];
         
         // Only add if value is not null
@@ -227,7 +227,7 @@ class StatisticsService extends BaseService {
             id: `${categoryIndex}-${year}`,
             category: categories.category.label[categoryIndex],
             year: year,
-            value: parseFloat(value).toLocaleString('mk-MK')
+            value: value
           });
         }
       });
@@ -278,16 +278,11 @@ class StatisticsService extends BaseService {
         const yearIndex = years.index[year];
         Object.entries(regions.label).forEach(([regionCode, regionLabel]) => {
           const regionIndex = regions.index[regionCode];
-          
-          // Calculate the position in the values array using the correct formula for a 3D array
-          // Index = i + (j * numItems) + (k * numItems * numYears)
-          // where i = itemIndex, j = yearIndex, k = regionIndex
-          const valueIndex = itemIndex + 
-            (yearIndex * numItems) + 
-            (regionIndex * numItems * numYears);
-          
+
+          const valueIndex = (itemIndex * numYears * numRegions) + (yearIndex * numRegions) + regionIndex;
+
           const value = values[valueIndex];
-          
+
           // Only add if value is not null
           if (value !== null) {
             transformedData.push({
