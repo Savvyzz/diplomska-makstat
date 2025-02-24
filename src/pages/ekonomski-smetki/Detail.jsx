@@ -6,6 +6,7 @@ import BackButton from '../../components/navigation/BackButton';
 import DataTable from '../../components/data-display/DataTable';
 import LoadingState from '../../components/feedback/LoadingState';
 import statisticsService from '../../services/StatisticsService';
+import DataDisplay from '../../components/data-display/DataDisplay';
 
 const EkonomskiSmetkiDetail = ({ title }) => {
   const location = useLocation();
@@ -19,6 +20,8 @@ const EkonomskiSmetkiDetail = ({ title }) => {
   const [totalRows, setTotalRows] = useState(0);
   const [years, setYears] = useState([]);
   const [selectedYear, setSelectedYear] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState('');
+  const [regions, setRegions] = useState([]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -36,6 +39,7 @@ const EkonomskiSmetkiDetail = ({ title }) => {
         setAllData(response.data);
         setYears(response.years);
         setSelectedYear(response.years[0]); // Select the most recent year by default
+        setRegions(response.regions);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -72,6 +76,10 @@ const EkonomskiSmetkiDetail = ({ title }) => {
     setSelectedYear(event.target.value);
   };
 
+  const handleRegionChange = (event) => {
+    setSelectedRegion(event.target.value);
+  };
+
   const paginatedData = useMemo(() => {
     return data.slice(
       page * rowsPerPage,
@@ -82,7 +90,7 @@ const EkonomskiSmetkiDetail = ({ title }) => {
   return (
     <Box>
       <Typography
-        variant="h4"
+        variant="h3"
         component="h1"
         sx={{
           fontWeight: 700,
@@ -92,31 +100,49 @@ const EkonomskiSmetkiDetail = ({ title }) => {
       >
         {title}
       </Typography>
-      
+
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between',
         alignItems: 'center',
-        mb: 3 
+        mb: 3,
+        gap: 2
       }}>
-        <FormControl 
-          sx={{ 
-            minWidth: 200
-          }}
-        >
-          <InputLabel id="year-select-label">Период</InputLabel>
-          <Select
-            labelId="year-select-label"
-            id="year-select"
-            value={selectedYear}
-            label="Период"
-            onChange={handleYearChange}
-          >
-            {years.map((year) => (
-              <MenuItem key={year} value={year}>{year}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel id="year-select-label">Година</InputLabel>
+            <Select
+              labelId="year-select-label"
+              id="year-select"
+              value={selectedYear}
+              label="Година"
+              onChange={handleYearChange}
+            >
+              <MenuItem value="">Сите години</MenuItem>
+              {years.map((year) => (
+                <MenuItem key={year} value={year}>{year}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {location.pathname.includes('regionalni') && (
+            <FormControl sx={{ minWidth: 200 }}>
+              <InputLabel id="region-select-label">Регион</InputLabel>
+              <Select
+                labelId="region-select-label"
+                id="region-select"
+                value={selectedRegion}
+                label="Регион"
+                onChange={handleRegionChange}
+              >
+                <MenuItem value="">Сите региони</MenuItem>
+                {regions.map((region) => (
+                  <MenuItem key={region} value={region}>{region}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+        </Box>
         <BackButton />
       </Box>
 
@@ -125,7 +151,7 @@ const EkonomskiSmetkiDetail = ({ title }) => {
         error={error}
         onRetry={fetchData}
       >
-        <DataTable
+        <DataDisplay
           columns={columns}
           data={paginatedData}
           loading={loading}
@@ -134,6 +160,7 @@ const EkonomskiSmetkiDetail = ({ title }) => {
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           totalRows={totalRows}
+          title={`${title} - ${selectedYear || 'Сите години'}`}
         />
       </LoadingState>
     </Box>

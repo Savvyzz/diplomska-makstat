@@ -1,7 +1,7 @@
-import { Typography, Box, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Typography, Box, FormControl, InputLabel, Select, MenuItem, Collapse } from '@mui/material';
 import BackButton from '../../../components/navigation/BackButton';
-import DataTable from '../../../components/data-display/DataTable';
+import DataDisplay from '../../../components/data-display/DataDisplay';
 import LoadingState from '../../../components/feedback/LoadingState';
 import statisticsService from '../../../services/StatisticsService';
 
@@ -16,6 +16,7 @@ const TrgovijaDashboard = () => {
   const [totalRows, setTotalRows] = useState(0);
   const [periods, setPeriods] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [viewMode, setViewMode] = useState('table');
 
   const fetchData = useCallback(async () => {
     try {
@@ -43,13 +44,16 @@ const TrgovijaDashboard = () => {
 
   // Filter data by selected period
   useEffect(() => {
-    if (selectedPeriod && allData.length > 0) {
+    if (viewMode === 'chart') {
+      setData(allData);
+      setTotalRows(allData.length);
+    } else if (selectedPeriod && allData.length > 0) {
       const filteredData = allData.filter(item => item.period === selectedPeriod);
       setData(filteredData);
       setTotalRows(filteredData.length);
       setPage(0); // Reset to first page when changing period
     }
-  }, [selectedPeriod, allData]);
+  }, [selectedPeriod, allData, viewMode]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -64,6 +68,22 @@ const TrgovijaDashboard = () => {
     setSelectedPeriod(event.target.value);
   };
 
+  const handleViewModeChange = (newMode) => {
+    setViewMode(newMode);
+    if (newMode === 'chart') {
+      // Show all data in chart view
+      setData(allData);
+      setTotalRows(allData.length);
+    } else {
+      // Reapply filters in table view
+      if (selectedPeriod) {
+        const filteredData = allData.filter(item => item.period === selectedPeriod);
+        setData(filteredData);
+        setTotalRows(filteredData.length);
+      }
+    }
+  };
+
   const paginatedData = useMemo(() => {
     return data.slice(
       page * rowsPerPage,
@@ -74,7 +94,7 @@ const TrgovijaDashboard = () => {
   return (
     <Box>
       <Typography
-        variant="h4"
+        variant="h3"
         component="h1"
         sx={{
           fontWeight: 700,
@@ -89,26 +109,28 @@ const TrgovijaDashboard = () => {
         display: 'flex', 
         justifyContent: 'space-between',
         alignItems: 'center',
-        mb: 3 
+        mb: 3,
+        gap: 2
       }}>
-        <FormControl 
-          sx={{ 
-            minWidth: 200
-          }}
-        >
-          <InputLabel id="period-select-label">Период</InputLabel>
-          <Select
-            labelId="period-select-label"
-            id="period-select"
-            value={selectedPeriod}
-            label="Период"
-            onChange={handlePeriodChange}
-          >
-            {periods.map((period) => (
-              <MenuItem key={period} value={period}>{period}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <Collapse in={viewMode === 'table'} orientation="horizontal">
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <FormControl sx={{ minWidth: 200 }}>
+              <InputLabel id="period-select-label">Период</InputLabel>
+              <Select
+                labelId="period-select-label"
+                id="period-select"
+                value={selectedPeriod}
+                label="Период"
+                onChange={handlePeriodChange}
+              >
+                <MenuItem value="">Сите периоди</MenuItem>
+                {periods.map((period) => (
+                  <MenuItem key={period} value={period}>{period}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        </Collapse>
         <BackButton />
       </Box>
 
@@ -117,7 +139,7 @@ const TrgovijaDashboard = () => {
         error={error}
         onRetry={fetchData}
       >
-        <DataTable
+        <DataDisplay
           columns={columns}
           data={paginatedData}
           loading={loading}
@@ -126,6 +148,8 @@ const TrgovijaDashboard = () => {
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           totalRows={totalRows}
+          title={`Деловни тенденции во трговијата на мало - ${selectedPeriod || 'Сите периоди'}`}
+          onViewModeChange={handleViewModeChange}
         />
       </LoadingState>
     </Box>

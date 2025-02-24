@@ -1,7 +1,7 @@
-import { Typography, Box, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Typography, Box, FormControl, InputLabel, Select, MenuItem, Collapse } from '@mui/material';
 import BackButton from '../../../components/navigation/BackButton';
-import DataTable from '../../../components/data-display/DataTable';
+import DataDisplay from '../../../components/data-display/DataDisplay';
 import LoadingState from '../../../components/feedback/LoadingState';
 import statisticsService from '../../../services/StatisticsService';
 
@@ -16,6 +16,7 @@ const PrerabotuvackaIndustrijaDashboard = () => {
   const [totalRows, setTotalRows] = useState(0);
   const [years, setYears] = useState([]);
   const [selectedYear, setSelectedYear] = useState('');
+  const [viewMode, setViewMode] = useState('table');
 
   const fetchData = useCallback(async () => {
     try {
@@ -43,13 +44,16 @@ const PrerabotuvackaIndustrijaDashboard = () => {
 
   // Filter data by selected year
   useEffect(() => {
-    if (selectedYear && allData.length > 0) {
+    if (viewMode === 'chart') {
+      setData(allData);
+      setTotalRows(allData.length);
+    } else if (selectedYear && allData.length > 0) {
       const filteredData = allData.filter(item => item.year === selectedYear);
       setData(filteredData);
       setTotalRows(filteredData.length);
       setPage(0); // Reset to first page when changing year
     }
-  }, [selectedYear, allData]);
+  }, [selectedYear, allData, viewMode]);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -64,6 +68,22 @@ const PrerabotuvackaIndustrijaDashboard = () => {
     setSelectedYear(event.target.value);
   };
 
+  const handleViewModeChange = (newMode) => {
+    setViewMode(newMode);
+    if (newMode === 'chart') {
+      // Show all data in chart view
+      setData(allData);
+      setTotalRows(allData.length);
+    } else {
+      // Reapply filters in table view
+      if (selectedYear) {
+        const filteredData = allData.filter(item => item.year === selectedYear);
+        setData(filteredData);
+        setTotalRows(filteredData.length);
+      }
+    }
+  };
+
   const paginatedData = useMemo(() => {
     return data.slice(
       page * rowsPerPage,
@@ -74,7 +94,7 @@ const PrerabotuvackaIndustrijaDashboard = () => {
   return (
     <Box>
       <Typography
-        variant="h4"
+        variant="h3"
         component="h1"
         sx={{
           fontWeight: 700,
@@ -89,26 +109,28 @@ const PrerabotuvackaIndustrijaDashboard = () => {
         display: 'flex', 
         justifyContent: 'space-between',
         alignItems: 'center',
-        mb: 3 
+        mb: 3,
+        gap: 2
       }}>
-        <FormControl 
-          sx={{ 
-            minWidth: 200
-          }}
-        >
-          <InputLabel id="year-select-label">Период</InputLabel>
-          <Select
-            labelId="year-select-label"
-            id="year-select"
-            value={selectedYear}
-            label="Период"
-            onChange={handleYearChange}
-          >
-            {years.map((year) => (
-              <MenuItem key={year} value={year}>{year}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <Collapse in={viewMode === 'table'} orientation="horizontal">
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <FormControl sx={{ minWidth: 200 }}>
+              <InputLabel id="year-select-label">Година</InputLabel>
+              <Select
+                labelId="year-select-label"
+                id="year-select"
+                value={selectedYear}
+                label="Година"
+                onChange={handleYearChange}
+              >
+                <MenuItem value="">Сите години</MenuItem>
+                {years.map((year) => (
+                  <MenuItem key={year} value={year}>{year}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        </Collapse>
         <BackButton />
       </Box>
 
@@ -117,7 +139,7 @@ const PrerabotuvackaIndustrijaDashboard = () => {
         error={error}
         onRetry={fetchData}
       >
-        <DataTable
+        <DataDisplay
           columns={columns}
           data={paginatedData}
           loading={loading}
@@ -126,6 +148,8 @@ const PrerabotuvackaIndustrijaDashboard = () => {
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           totalRows={totalRows}
+          title={`Деловни тенденции во преработувачката индустрија - ${selectedYear || 'Сите години'}`}
+          onViewModeChange={handleViewModeChange}
         />
       </LoadingState>
     </Box>

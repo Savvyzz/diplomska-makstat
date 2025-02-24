@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Typography, Box, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import PropTypes from 'prop-types';
 import BackButton from '../../components/navigation/BackButton';
-import DataTable from '../../components/data-display/DataTable';
+import DataDisplay from '../../components/data-display/DataDisplay';
 import LoadingState from '../../components/feedback/LoadingState';
 import statisticsService from '../../services/StatisticsService';
 
@@ -149,7 +149,7 @@ const ProstorniEdiniciDetail = ({ title }) => {
         error={error}
         onRetry={fetchData}
       >
-        <DataTable
+        <DataDisplay
           columns={columns}
           data={paginatedData}
           loading={loading}
@@ -158,6 +158,7 @@ const ProstorniEdiniciDetail = ({ title }) => {
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           totalRows={totalRows}
+          title={`${title} - ${selectedPeriod || 'Сите периоди'}`}
         />
       </LoadingState>
     </Box>

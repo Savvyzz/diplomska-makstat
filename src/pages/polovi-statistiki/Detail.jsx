@@ -3,7 +3,7 @@ import { Typography, Box, FormControl, InputLabel, Select, MenuItem } from '@mui
 import PropTypes from 'prop-types';
 import { useLocation } from 'react-router-dom';
 import BackButton from '../../components/navigation/BackButton';
-import DataTable from '../../components/data-display/DataTable';
+import DataDisplay from '../../components/data-display/DataDisplay';
 import LoadingState from '../../components/feedback/LoadingState';
 import statisticsService from '../../services/StatisticsService';
 
@@ -127,64 +127,79 @@ const PoloviStatistikiDetail = ({ title }) => {
       </Typography>
 
       <Box sx={{ 
-        mb: 4,
-        display: 'flex',
+        display: 'flex', 
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'center',
+        mb: 3,
+        gap: 2
       }}>
-        <Box sx={{ 
-          display: 'flex',
-          gap: 2,
-          flexWrap: 'wrap'
-        }}>
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel id="year-select-label">Година</InputLabel>
-            <Select
-              labelId="year-select-label"
-              id="year-select"
-              value={selectedYear}
-              label="Година"
-              onChange={handleYearChange}
-            >
-              <MenuItem value="">Сите години</MenuItem>
-              {years.map((year) => (
-                <MenuItem key={year} value={year}>{year}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {isZrtviNasilstvo ? (
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel id="vozrast-select-label">Возрасна група</InputLabel>
-              <Select
-                labelId="vozrast-select-label"
-                id="vozrast-select"
-                value={selectedVozrastGrupa}
-                label="Возрасна група"
-                onChange={handleVozrastGrupaChange}
-              >
-                <MenuItem value="">Сите</MenuItem>
-                {vozrasniGrupi.map((vozrastGrupa) => (
-                  <MenuItem key={vozrastGrupa} value={vozrastGrupa}>{vozrastGrupa}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          {location.pathname.includes('zrtvi-nasilstvo') ? (
+            <>
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel id="year-select-label">Година</InputLabel>
+                <Select
+                  labelId="year-select-label"
+                  id="year-select"
+                  value={selectedYear}
+                  label="Година"
+                  onChange={handleYearChange}
+                >
+                  <MenuItem value="">Сите години</MenuItem>
+                  {years.map((year) => (
+                    <MenuItem key={year} value={year}>{year}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel id="age-group-select-label">Возрасна група</InputLabel>
+                <Select
+                  labelId="age-group-select-label"
+                  id="age-group-select"
+                  value={selectedVozrastGrupa}
+                  label="Возрасна група"
+                  onChange={handleVozrastGrupaChange}
+                >
+                  <MenuItem value="">Сите возрасни групи</MenuItem>
+                  {vozrasniGrupi.map((grupa) => (
+                    <MenuItem key={grupa} value={grupa}>{grupa}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </>
           ) : (
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel id="gender-select-label">Пол</InputLabel>
-              <Select
-                labelId="gender-select-label"
-                id="gender-select"
-                value={selectedGender}
-                label="Пол"
-                onChange={handleGenderChange}
-              >
-                <MenuItem value="">Сите</MenuItem>
-                {genders.map((gender) => (
-                  <MenuItem key={gender} value={gender}>{gender}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <>
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel id="year-select-label">Година</InputLabel>
+                <Select
+                  labelId="year-select-label"
+                  id="year-select"
+                  value={selectedYear}
+                  label="Година"
+                  onChange={handleYearChange}
+                >
+                  <MenuItem value="">Сите години</MenuItem>
+                  {years.map((year) => (
+                    <MenuItem key={year} value={year}>{year}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel id="gender-select-label">Пол</InputLabel>
+                <Select
+                  labelId="gender-select-label"
+                  id="gender-select"
+                  value={selectedGender}
+                  label="Пол"
+                  onChange={handleGenderChange}
+                >
+                  <MenuItem value="">Сите</MenuItem>
+                  {genders.map((gender) => (
+                    <MenuItem key={gender} value={gender}>{gender}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </>
           )}
         </Box>
         <BackButton />
@@ -195,7 +210,7 @@ const PoloviStatistikiDetail = ({ title }) => {
         error={error}
         onRetry={fetchData}
       >
-        <DataTable
+        <DataDisplay
           columns={columns}
           data={paginatedData}
           loading={loading}
@@ -204,6 +219,7 @@ const PoloviStatistikiDetail = ({ title }) => {
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           totalRows={totalRows}
+          title={`${title} - ${selectedYear || 'Сите години'}`}
         />
       </LoadingState>
     </Box>

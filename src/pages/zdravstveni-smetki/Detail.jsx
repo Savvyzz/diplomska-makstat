@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Typography, Box, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import PropTypes from 'prop-types';
 import BackButton from '../../components/navigation/BackButton';
-import DataTable from '../../components/data-display/DataTable';
+import DataDisplay from '../../components/data-display/DataDisplay';
 import LoadingState from '../../components/feedback/LoadingState';
 import statisticsService from '../../services/StatisticsService';
 import { useLocation } from 'react-router-dom';
@@ -82,7 +82,7 @@ const ZdravstveniSmetkiDetail = ({ title }) => {
   return (
     <Box>
       <Typography
-        variant="h4"
+        variant="h3"
         component="h1"
         sx={{
           fontWeight: 700,
@@ -92,31 +92,31 @@ const ZdravstveniSmetkiDetail = ({ title }) => {
       >
         {title}
       </Typography>
-      
+
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between',
         alignItems: 'center',
-        mb: 3 
+        mb: 3,
+        gap: 2
       }}>
-        <FormControl 
-          sx={{ 
-            minWidth: 200
-          }}
-        >
-          <InputLabel id="year-select-label">Година</InputLabel>
-          <Select
-            labelId="year-select-label"
-            id="year-select"
-            value={selectedYear}
-            label="Година"
-            onChange={handleYearChange}
-          >
-            {years.map((year) => (
-              <MenuItem key={year} value={year}>{year}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel id="year-select-label">Година</InputLabel>
+            <Select
+              labelId="year-select-label"
+              id="year-select"
+              value={selectedYear}
+              label="Година"
+              onChange={handleYearChange}
+            >
+              <MenuItem value="">Сите години</MenuItem>
+              {years.map((year) => (
+                <MenuItem key={year} value={year}>{year}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
         <BackButton />
       </Box>
 
@@ -125,7 +125,7 @@ const ZdravstveniSmetkiDetail = ({ title }) => {
         error={error}
         onRetry={fetchData}
       >
-        <DataTable
+        <DataDisplay
           columns={columns}
           data={paginatedData}
           loading={loading}
@@ -134,6 +134,7 @@ const ZdravstveniSmetkiDetail = ({ title }) => {
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           totalRows={totalRows}
+          title={`${title} - ${selectedYear || 'Сите години'}`}
         />
       </LoadingState>
     </Box>
