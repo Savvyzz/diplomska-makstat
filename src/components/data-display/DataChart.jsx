@@ -1,9 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Pie, Bar } from 'react-chartjs-2';
+import { Pie, Bar, Line } from 'react-chartjs-2';
 import { Box, Typography, ToggleButton, ToggleButtonGroup, Tooltip as MuiTooltip } from '@mui/material';
 import PieChartIcon from '@mui/icons-material/PieChart';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import ShowChartIcon from '@mui/icons-material/ShowChart';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -12,7 +13,9 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
-  Title
+  Title,
+  LineElement,
+  PointElement
 } from 'chart.js';
 
 // Register Chart.js components
@@ -23,6 +26,8 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
+  LineElement,
+  PointElement,
   Title
 );
 
@@ -82,10 +87,16 @@ const DataChart = ({ data, title }) => {
       labels,
       datasets: [{
         data: values,
-        backgroundColor,
-        borderColor,
-        borderWidth: 1,
-        label: 'Вредност'
+        backgroundColor: chartType === 'line' ? backgroundColor[0] : backgroundColor,
+        borderColor: chartType === 'line' ? borderColor[0] : borderColor,
+        borderWidth: chartType === 'line' ? 2 : 1,
+        label: 'Вредност',
+        tension: 0.4,
+        fill: false,
+        pointBackgroundColor: backgroundColor[0],
+        pointBorderColor: borderColor[0],
+        pointRadius: chartType === 'line' ? 4 : 0,
+        pointHoverRadius: chartType === 'line' ? 6 : 0,
       }]
     };
   };
@@ -174,6 +185,45 @@ const DataChart = ({ data, title }) => {
     }
   };
 
+  const lineOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const value = context.raw;
+            return `Вредност: ${value.toLocaleString('mk-MK')}`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          font: {
+            size: 11
+          },
+          maxRotation: 45,
+          minRotation: 45,
+          callback: (value) => {
+            const label = chartData.labels[value];
+            return label.length > 30 ? label.substr(0, 27) + '...' : label;
+          }
+        }
+      },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: (value) => value.toLocaleString('mk-MK')
+        }
+      }
+    }
+  };
+
   const handleChartTypeChange = (event, newType) => {
     if (newType !== null) {
       setChartType(newType);
@@ -217,13 +267,20 @@ const DataChart = ({ data, title }) => {
               <BarChartIcon />
             </ToggleButton>
           </MuiTooltip>
+          <MuiTooltip title="Линиски дијаграм">
+            <ToggleButton value="line" aria-label="line chart">
+              <ShowChartIcon />
+            </ToggleButton>
+          </MuiTooltip>
         </ToggleButtonGroup>
       </Box>
       <Box sx={{ width: '100%', height: 'calc(100% - 48px)' }}>
         {chartType === 'pie' ? (
           <Pie data={chartData} options={pieOptions} />
-        ) : (
+        ) : chartType === 'bar' ? (
           <Bar data={chartData} options={barOptions} />
+        ) : (
+          <Line data={chartData} options={lineOptions} />
         )}
       </Box>
     </Box>
