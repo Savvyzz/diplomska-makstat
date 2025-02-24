@@ -22,6 +22,8 @@ import './assets/styles/main.scss';
 import GradeznistvoDashboard from './pages/delovni-tendencii/gradeznistvo';
 import PrerabotuvackaIndustrijaDashboard from './pages/delovni-tendencii/prerabotuvacka-industrija';
 import TrgovijaDashboard from './pages/delovni-tendencii/trgovija';
+import FunkciiShemiDashboard from './pages/zdravstveni-smetki/funkcii-shemi';
+import DavateliShemiDashboard from './pages/zdravstveni-smetki/davateli-shemi';
 
 function App() {
   const theme = useTheme();
@@ -62,7 +64,7 @@ function App() {
             <Route path="/zdravstveni-smetki" element={<ZdravstveniSmetki />} />
             <Route 
               path="/zdravstveni-smetki/funkcii-shemi" 
-              element={<ZdravstveniSmetkiDetail title="Тековни трошоци за здравството по здравствени функции и здравствени шеми" />} 
+              element={<FunkciiShemiDashboard />} 
             />
             <Route 
               path="/zdravstveni-smetki/funkcii-davateli" 
@@ -70,7 +72,7 @@ function App() {
             />
             <Route 
               path="/zdravstveni-smetki/davateli-shemi" 
-              element={<ZdravstveniSmetkiDetail title="Тековни трошоци за здравството по даватели на здравствена заштита и здравствени шеми" />} 
+              element={<DavateliShemiDashboard />} 
             />
             <Route path="/polovi-statistiki" element={<PoloviStatistiki />} />
             <Route 

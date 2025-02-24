@@ -1,13 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Typography, Box, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import PropTypes from 'prop-types';
-import BackButton from '../../components/navigation/BackButton';
-import DataTable from '../../components/data-display/DataTable';
-import LoadingState from '../../components/feedback/LoadingState';
-import statisticsService from '../../services/StatisticsService';
-import { useLocation } from 'react-router-dom';
+import BackButton from '../../../components/navigation/BackButton';
+import DataTable from '../../../components/data-display/DataTable';
+import LoadingState from '../../../components/feedback/LoadingState';
+import statisticsService from '../../../services/StatisticsService';
 
-const ZdravstveniSmetkiDetail = ({ title }) => {
+const DavateliShemiDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [data, setData] = useState([]);
@@ -18,18 +16,12 @@ const ZdravstveniSmetkiDetail = ({ title }) => {
   const [totalRows, setTotalRows] = useState(0);
   const [years, setYears] = useState([]);
   const [selectedYear, setSelectedYear] = useState('');
-  const location = useLocation();
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      // Determine which endpoint to use based on the current route
-      const isFunkciiDavateli = location.pathname.includes('funkcii-davateli');
-      const response = isFunkciiDavateli 
-        ? await statisticsService.getZdravstveniFunkciiDavateli()
-        : await statisticsService.getZdravstveniFunkciiShemi();
+      const response = await statisticsService.getZdravstveniDavateliShemi();
 
       if (response) {
         setColumns(response.columns);
@@ -43,7 +35,7 @@ const ZdravstveniSmetkiDetail = ({ title }) => {
     } finally {
       setLoading(false);
     }
-  }, [location.pathname]);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -90,7 +82,7 @@ const ZdravstveniSmetkiDetail = ({ title }) => {
           mb: 4
         }}
       >
-        {title}
+        Тековни трошоци за здравството по даватели на здравствена заштита и здравствени шеми
       </Typography>
       
       <Box sx={{ 
@@ -140,8 +132,4 @@ const ZdravstveniSmetkiDetail = ({ title }) => {
   );
 };
 
-ZdravstveniSmetkiDetail.propTypes = {
-  title: PropTypes.string.isRequired,
-};
-
-export default ZdravstveniSmetkiDetail; 
+export default DavateliShemiDashboard; 
