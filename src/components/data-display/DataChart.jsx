@@ -1,14 +1,18 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Pie } from 'react-chartjs-2';
-import { Box, Typography } from '@mui/material';
+import { Pie, Bar } from 'react-chartjs-2';
+import { Box, Typography, ToggleButton, ToggleButtonGroup, Tooltip as MuiTooltip } from '@mui/material';
+import PieChartIcon from '@mui/icons-material/PieChart';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import {
   Chart as ChartJS,
   ArcElement,
   Tooltip,
   Legend,
   CategoryScale,
-  LinearScale
+  LinearScale,
+  BarElement,
+  Title
 } from 'chart.js';
 
 // Register Chart.js components
@@ -17,10 +21,14 @@ ChartJS.register(
   Tooltip,
   Legend,
   CategoryScale,
-  LinearScale
+  LinearScale,
+  BarElement,
+  Title
 );
 
 const DataChart = ({ data, title }) => {
+  const [chartType, setChartType] = React.useState('pie');
+
   // Generate random colors for chart segments
   const generateColors = (count) => {
     const colors = [];
@@ -55,7 +63,7 @@ const DataChart = ({ data, title }) => {
     return labelParts.join(' - ');
   };
 
-  // Prepare data for the pie chart
+  // Prepare data for the charts
   const prepareChartData = () => {
     // Take first 10 items to avoid overcrowding
     const displayData = data.slice(0, 10);
@@ -77,13 +85,14 @@ const DataChart = ({ data, title }) => {
         backgroundColor,
         borderColor,
         borderWidth: 1,
+        label: 'Вредност'
       }]
     };
   };
 
   const chartData = prepareChartData();
 
-  const options = {
+  const pieOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -95,7 +104,6 @@ const DataChart = ({ data, title }) => {
           font: {
             size: 12
           },
-          // Customize legend labels
           generateLabels: (chart) => {
             const data = chart.data;
             if (data.labels.length && data.datasets.length) {
@@ -127,6 +135,51 @@ const DataChart = ({ data, title }) => {
     }
   };
 
+  const barOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: 'y',
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const value = context.raw;
+            return `Вредност: ${value.toLocaleString('mk-MK')}`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        ticks: {
+          callback: (value) => value.toLocaleString('mk-MK')
+        }
+      },
+      y: {
+        ticks: {
+          font: {
+            size: 11
+          },
+          callback: (value) => {
+            const label = chartData.labels[value];
+            // Truncate long labels
+            return label.length > 50 ? label.substr(0, 47) + '...' : label;
+          }
+        }
+      }
+    }
+  };
+
+  const handleChartTypeChange = (event, newType) => {
+    if (newType !== null) {
+      setChartType(newType);
+    }
+  };
+
   return (
     <Box sx={{ 
       width: '100%', 
@@ -135,13 +188,43 @@ const DataChart = ({ data, title }) => {
       flexDirection: 'column',
       alignItems: 'center' 
     }}>
-      {title && (
-        <Typography variant="h6" component="h2" gutterBottom>
-          {title}
-        </Typography>
-      )}
-      <Box sx={{ width: '100%', height: '100%' }}>
-        <Pie data={chartData} options={options} />
+      <Box sx={{ 
+        width: '100%', 
+        display: 'flex', 
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        mb: 2 
+      }}>
+        {title && (
+          <Typography variant="h6" component="h2">
+            {title}
+          </Typography>
+        )}
+        <ToggleButtonGroup
+          value={chartType}
+          exclusive
+          onChange={handleChartTypeChange}
+          aria-label="chart type"
+          size="small"
+        >
+          <MuiTooltip title="Кружен дијаграм">
+            <ToggleButton value="pie" aria-label="pie chart">
+              <PieChartIcon />
+            </ToggleButton>
+          </MuiTooltip>
+          <MuiTooltip title="Столбест дијаграм">
+            <ToggleButton value="bar" aria-label="bar chart">
+              <BarChartIcon />
+            </ToggleButton>
+          </MuiTooltip>
+        </ToggleButtonGroup>
+      </Box>
+      <Box sx={{ width: '100%', height: 'calc(100% - 48px)' }}>
+        {chartType === 'pie' ? (
+          <Pie data={chartData} options={pieOptions} />
+        ) : (
+          <Bar data={chartData} options={barOptions} />
+        )}
       </Box>
     </Box>
   );
