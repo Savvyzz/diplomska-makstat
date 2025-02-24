@@ -333,6 +333,7 @@ class StatisticsService extends BaseService {
 
     // Transform the data into rows
     const transformedData = [];
+    const yearsWithData = new Set();
     
     // For each function and scheme combination
     Object.entries(functions.label).forEach(([functionCode, functionLabel]) => {
@@ -355,14 +356,14 @@ class StatisticsService extends BaseService {
               year: yearLabel,
               value: value
             });
+            yearsWithData.add(yearLabel);
           }
         });
       });
     });
 
     // Get unique years for filtering, sorted in descending order
-    const uniqueYears = Object.values(years.label)
-      .sort((a, b) => b - a);
+    const uniqueYears = [...yearsWithData].sort((a, b) => b - a);
 
     return {
       columns: [
@@ -399,6 +400,7 @@ class StatisticsService extends BaseService {
 
     // Transform the data into rows
     const transformedData = [];
+    const yearsWithData = new Set();
     
     // For each function and provider combination
     Object.entries(functions.label).forEach(([functionCode, functionLabel]) => {
@@ -417,18 +419,18 @@ class StatisticsService extends BaseService {
             transformedData.push({
               id: `${functionCode}-${year}-${providerCode}`,
               function: functionLabel,
-              provider: providerLabel.trim(), // Remove leading spaces from provider labels
+              provider: providerLabel.trim(),
               year: yearLabel,
               value: value
             });
+            yearsWithData.add(yearLabel);
           }
         });
       });
     });
 
     // Get unique years for filtering, sorted in descending order
-    const uniqueYears = Object.values(years.label)
-      .sort((a, b) => b - a);
+    const uniqueYears = [...yearsWithData].sort((a, b) => b - a);
 
     return {
       columns: [
@@ -465,6 +467,7 @@ class StatisticsService extends BaseService {
 
     // Transform the data into rows
     const transformedData = [];
+    const yearsWithData = new Set();
     
     // For each provider and scheme combination
     Object.entries(providers.label).forEach(([providerCode, providerLabel]) => {
@@ -482,19 +485,19 @@ class StatisticsService extends BaseService {
           if (value !== null && value !== undefined && status[valueIndex] !== '-' && status[valueIndex] !== '..') {
             transformedData.push({
               id: `${providerCode}-${year}-${schemeCode}`,
-              provider: providerLabel.trim(), // Remove leading spaces from provider labels
-              scheme: schemeLabel.trim(), // Remove leading spaces from scheme labels
+              provider: providerLabel.trim(),
+              scheme: schemeLabel.trim(),
               year: yearLabel,
               value: value
             });
+            yearsWithData.add(yearLabel);
           }
         });
       });
     });
 
     // Get unique years for filtering, sorted in descending order
-    const uniqueYears = Object.values(years.label)
-      .sort((a, b) => b - a);
+    const uniqueYears = [...yearsWithData].sort((a, b) => b - a);
 
     return {
       columns: [
@@ -506,6 +509,220 @@ class StatisticsService extends BaseService {
       data: transformedData,
       totalRows: transformedData.length,
       years: uniqueYears
+    };
+  }
+
+  async getPoloviStatistikiPokazateli() {
+    const response = await this.post(ENDPOINTS.POLOVI_STATISTIKI_POKAZATELI, {
+      query: [],
+      response: {
+        format: "json-stat"
+      }
+    });
+
+    const dataset = response.dataset;
+    const pokazateliDimension = dataset.dimension['Показател'].category;
+    const yearDimension = dataset.dimension['Година'].category;
+    const polDimension = dataset.dimension['Пол'].category;
+    const values = dataset.value;
+    const status = dataset.status || {};
+
+    // Get dimensions sizes
+    const numPokazateli = Object.keys(pokazateliDimension.index).length;
+    const numYears = Object.keys(yearDimension.index).length;
+    const numPol = Object.keys(polDimension.index).length;
+
+    // Transform the data into rows
+    const transformedData = [];
+    const yearsWithData = new Set();
+    const gendersWithData = new Set();
+    
+    // For each pokazatel, year, and pol combination
+    Object.entries(pokazateliDimension.label).forEach(([pokazatelCode, pokazatelLabel]) => {
+      const pokazatelIndex = pokazateliDimension.index[pokazatelCode];
+      Object.entries(yearDimension.label).forEach(([year, yearLabel]) => {
+        const yearIndex = yearDimension.index[year];
+        Object.entries(polDimension.label).forEach(([polCode, polLabel]) => {
+          const polIndex = polDimension.index[polCode];
+
+          // Calculate the position in the values array
+          const valueIndex = (pokazatelIndex * numYears * numPol) + (yearIndex * numPol) + polIndex;
+          const value = values[valueIndex];
+          const statusValue = status[valueIndex];
+
+          // Only add if value is not null or has a status
+          if (value !== null || statusValue) {
+            transformedData.push({
+              id: `${pokazatelCode}-${year}-${polCode}`,
+              pokazatel: pokazatelLabel,
+              year: yearLabel,
+              pol: polLabel,
+              value: statusValue || value
+            });
+            yearsWithData.add(yearLabel);
+            gendersWithData.add(polLabel);
+          }
+        });
+      });
+    });
+
+    // Get unique years and genders for filtering, sorted appropriately
+    const uniqueYears = [...yearsWithData].sort((a, b) => b - a);
+    const uniqueGenders = [...gendersWithData];
+
+    return {
+      columns: [
+        { field: 'pokazatel', headerName: 'Показател', numeric: false },
+        { field: 'year', headerName: 'Година', numeric: true },
+        { field: 'pol', headerName: 'Пол', numeric: false },
+        { field: 'value', headerName: 'Вредност', numeric: true }
+      ],
+      data: transformedData,
+      totalRows: transformedData.length,
+      years: uniqueYears,
+      genders: uniqueGenders
+    };
+  }
+
+  async getPoloviStatistikiZrtviNasilstvo() {
+    const response = await this.post(ENDPOINTS.POLOVI_STATISTIKI_ZRTVI_NASILSTVO, {
+      query: [],
+      response: {
+        format: "json-stat"
+      }
+    });
+
+    const dataset = response.dataset;
+    const vozrasniGrupiDimension = dataset.dimension['Возрасни групи'].category;
+    const yearDimension = dataset.dimension['Година'].category;
+    const priciniDimension = dataset.dimension['Причини'].category;
+    const values = dataset.value;
+    const status = dataset.status || {};
+
+    // Get dimensions sizes
+    const numVozrasniGrupi = Object.keys(vozrasniGrupiDimension.index).length;
+    const numYears = Object.keys(yearDimension.index).length;
+    const numPricini = Object.keys(priciniDimension.index).length;
+
+    // Transform the data into rows
+    const transformedData = [];
+    const yearsWithData = new Set();
+    const vozrasniGrupiWithData = new Set();
+    
+    // For each combination of dimensions
+    Object.entries(vozrasniGrupiDimension.label).forEach(([vozrastCode, vozrastLabel]) => {
+      const vozrastIndex = vozrasniGrupiDimension.index[vozrastCode];
+      Object.entries(yearDimension.label).forEach(([year, yearLabel]) => {
+        const yearIndex = yearDimension.index[year];
+        Object.entries(priciniDimension.label).forEach(([pricinaCode, pricinaLabel]) => {
+          const pricinaIndex = priciniDimension.index[pricinaCode];
+
+          // Calculate the position in the values array
+          const valueIndex = (vozrastIndex * numYears * numPricini) + (yearIndex * numPricini) + pricinaIndex;
+          const value = values[valueIndex];
+          const statusValue = status[valueIndex];
+
+          // Only add if value is not null or has a status
+          if (value !== null || statusValue) {
+            transformedData.push({
+              id: `${vozrastCode}-${year}-${pricinaCode}`,
+              vozrastGrupa: vozrastLabel,
+              year: yearLabel,
+              pricina: pricinaLabel,
+              value: statusValue || value
+            });
+            yearsWithData.add(yearLabel);
+            vozrasniGrupiWithData.add(vozrastLabel);
+          }
+        });
+      });
+    });
+
+    // Get unique years and age groups for filtering, sorted appropriately
+    const uniqueYears = [...yearsWithData].sort((a, b) => b - a);
+    const uniqueVozrasniGrupi = [...vozrasniGrupiWithData];
+
+    return {
+      columns: [
+        { field: 'vozrastGrupa', headerName: 'Возрасна група', numeric: false },
+        { field: 'pricina', headerName: 'Причина', numeric: false },
+        { field: 'year', headerName: 'Година', numeric: true },
+        { field: 'value', headerName: 'Процент', numeric: true }
+      ],
+      data: transformedData,
+      totalRows: transformedData.length,
+      years: uniqueYears,
+      vozrasniGrupi: uniqueVozrasniGrupi
+    };
+  }
+
+  async getProstorniEdiniciOpstiniNaseleniMesta() {
+    const response = await this.post(ENDPOINTS.PROSTORNI_EDINICI_OPSTINI_NASELENI_MESTA, {
+      query: [],
+      response: {
+        format: "json-stat"
+      }
+    });
+
+    const dataset = response.dataset;
+    const regionDimension = dataset.dimension['Статистички регион'].category;
+    const periodDimension = dataset.dimension['Период'].category;
+    const typeDimension = dataset.dimension['Општини и населени места'].category;
+    const values = dataset.value;
+
+    // Get dimensions sizes
+    const numRegions = Object.keys(regionDimension.index).length;
+    const numPeriods = Object.keys(periodDimension.index).length;
+    const numTypes = Object.keys(typeDimension.index).length;
+
+    // Transform the data into rows
+    const transformedData = [];
+    const periodsWithData = new Set();
+    const regionsWithData = new Set();
+    
+    // For each combination of dimensions
+    Object.entries(regionDimension.label).forEach(([regionCode, regionLabel]) => {
+      const regionIndex = regionDimension.index[regionCode];
+      Object.entries(periodDimension.label).forEach(([periodCode, periodLabel]) => {
+        const periodIndex = periodDimension.index[periodCode];
+        Object.entries(typeDimension.label).forEach(([typeCode, typeLabel]) => {
+          const typeIndex = typeDimension.index[typeCode];
+
+          // Calculate the position in the values array
+          const valueIndex = (regionIndex * numPeriods * numTypes) + (periodIndex * numTypes) + typeIndex;
+          const value = values[valueIndex];
+
+          // Only add if value is not null
+          if (value !== null) {
+            transformedData.push({
+              id: `${regionCode}-${periodCode}-${typeCode}`,
+              region: regionLabel,
+              period: periodLabel,
+              type: typeLabel,
+              value: value
+            });
+            periodsWithData.add(periodLabel);
+            regionsWithData.add(regionLabel);
+          }
+        });
+      });
+    });
+
+    // Get unique periods and regions for filtering
+    const uniquePeriods = [...periodsWithData];
+    const uniqueRegions = [...regionsWithData];
+
+    return {
+      columns: [
+        { field: 'region', headerName: 'Статистички регион', numeric: false },
+        { field: 'period', headerName: 'Период', numeric: false },
+        { field: 'type', headerName: 'Тип', numeric: false },
+        { field: 'value', headerName: 'Број', numeric: true }
+      ],
+      data: transformedData,
+      totalRows: transformedData.length,
+      periods: uniquePeriods,
+      regions: uniqueRegions
     };
   }
 }

@@ -9,7 +9,10 @@ export const ENDPOINTS = {
   EKONOMSKI_SMETKI_REGIONALNI: '/EkSmetkiZem/200_Zem_reg_EAApro_ml.px',
   ZDRAVSTVENI_SMETKI_FUNKCII_SHEMI: '/ZdrastveniSmetki/125_NacSmM_Mk_HPxHF_ml.px',
   ZDRAVSTVENI_SMETKI_FUNKCII_DAVATELI: '/ZdrastveniSmetki/150_NacSmM_Mk_HPxHF_ml.px',
-  ZDRAVSTVENI_SMETKI_DAVATELI_SHEMI: '/ZdrastveniSmetki/175_NacSmM_Mk_HPxHF_ml.px'
+  ZDRAVSTVENI_SMETKI_DAVATELI_SHEMI: '/ZdrastveniSmetki/175_NacSmM_Mk_HPxHF_ml.px',
+  POLOVI_STATISTIKI_POKAZATELI: '/PoloviStat/125_PoloviStatistiki_ml.px',
+  POLOVI_STATISTIKI_ZRTVI_NASILSTVO: '/PoloviStat/150_PazTrud_Mk_GBV_ml.px',
+  PROSTORNI_EDINICI_OPSTINI_NASELENI_MESTA: '/ProstorniEdinici/125_PrEdn_reg_09_BrOpstiniNM_ml.px'
 };
 
 export const API_RESPONSE_CODES = {
