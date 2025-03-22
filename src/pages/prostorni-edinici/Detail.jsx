@@ -1,68 +1,36 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Typography, Box, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import PropTypes from 'prop-types';
 import BackButton from '../../components/navigation/BackButton';
 import DataDisplay from '../../components/data-display/DataDisplay';
 import LoadingState from '../../components/feedback/LoadingState';
-import statisticsService from '../../services/StatisticsService';
+import { useProstorniEdiniciOpstiniNaseleniMesta } from '../../hooks/useStatistics';
 
-const ProstorniEdiniciDetail = ({ title }) => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [data, setData] = useState([]);
-  const [allData, setAllData] = useState([]);
-  const [columns, setColumns] = useState([]);
+const ProstorniEdiniciDetail = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [totalRows, setTotalRows] = useState(0);
-  const [periods, setPeriods] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState('');
-  const [regions, setRegions] = useState([]);
   const [selectedRegion, setSelectedRegion] = useState('');
+  const [selectedType, setSelectedType] = useState('');
+  const [viewMode, setViewMode] = useState('table');
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await statisticsService.getProstorniEdiniciOpstiniNaseleniMesta();
+  // Use React Query hook
+  const { data: response, isLoading, error, refetch } = useProstorniEdiniciOpstiniNaseleniMesta();
+  const { data: allData = [], columns = [], periods = [], regions = [], types = [] } = response || {};
 
-      if (response) {
-        setColumns(response.columns);
-        setAllData(response.data);
-        setPeriods(response.periods);
-        setRegions(response.regions);
-        setSelectedPeriod(response.periods[0]); // Select the most recent period by default
-        setSelectedRegion(''); // Don't select any region by default
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setError(error.message || 'Настана грешка при вчитување на податоците');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  // Filter data based on selected filters
+  // Filter data by selected filters
   const filteredData = useMemo(() => {
-    if (!selectedPeriod && !selectedRegion) return allData;
-    
+    if (viewMode === 'chart') {
+      return allData;
+    }
     return allData.filter(item => {
-      const periodMatch = !selectedPeriod || item.period === selectedPeriod;
-      const regionMatch = !selectedRegion || item.region === selectedRegion;
-      return periodMatch && regionMatch;
+      const periodMatch = selectedPeriod === '' || item.period === selectedPeriod;
+      const regionMatch = selectedRegion === '' || item.region === selectedRegion;
+      const typeMatch = selectedType === '' || item.type === selectedType;
+      return periodMatch && regionMatch && typeMatch;
     });
-  }, [allData, selectedPeriod, selectedRegion]);
+  }, [selectedPeriod, selectedRegion, selectedType, allData, viewMode]);
 
-  // Update data and total rows when filtered data changes
-  useEffect(() => {
-    setData(filteredData);
-    setTotalRows(filteredData.length);
-    setPage(0); // Reset to first page when filters change
-  }, [filteredData]);
+  const totalRows = filteredData.length;
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -81,16 +49,25 @@ const ProstorniEdiniciDetail = ({ title }) => {
     setSelectedRegion(event.target.value);
   };
 
-  // Calculate paginated data
+  const handleTypeChange = (event) => {
+    setSelectedType(event.target.value);
+  };
+
+  const handleViewModeChange = (newMode) => {
+    setViewMode(newMode);
+  };
+
   const paginatedData = useMemo(() => {
-    const startIndex = page * rowsPerPage;
-    return data.slice(startIndex, startIndex + rowsPerPage);
-  }, [data, page, rowsPerPage]);
+    return filteredData.slice(
+      page * rowsPerPage,
+      page * rowsPerPage + rowsPerPage
+    );
+  }, [filteredData, page, rowsPerPage]);
 
   return (
     <Box>
       <Typography
-        variant="h3"
+        variant="h4"
         component="h1"
         sx={{
           fontWeight: 700,
@@ -98,9 +75,9 @@ const ProstorniEdiniciDetail = ({ title }) => {
           mb: 4
         }}
       >
-        {title}
+        Просторни единици
       </Typography>
-
+      
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between',
@@ -108,7 +85,7 @@ const ProstorniEdiniciDetail = ({ title }) => {
         mb: 3,
         gap: 2
       }}>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
           <FormControl sx={{ minWidth: 200 }}>
             <InputLabel id="period-select-label">Период</InputLabel>
             <Select
@@ -119,25 +96,44 @@ const ProstorniEdiniciDetail = ({ title }) => {
               onChange={handlePeriodChange}
             >
               <MenuItem value="">Сите периоди</MenuItem>
-              {periods.map((period) => (
+              {periods?.map((period) => (
                 <MenuItem key={period} value={period}>{period}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel id="region-select-label">Регион</InputLabel>
+            <Select
+              labelId="region-select-label"
+              id="region-select"
+              value={selectedRegion}
+              label="Регион"
+              onChange={handleRegionChange}
+            >
+              <MenuItem value="">Сите региони</MenuItem>
+              {regions?.map((region) => (
+                <MenuItem key={region} value={region}>{region}</MenuItem>
               ))}
             </Select>
           </FormControl>
 
           <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel id="region-select-label">Статистички регион</InputLabel>
+            <InputLabel id="type-select-label">Категорија</InputLabel>
             <Select
-              labelId="region-select-label"
-              id="region-select"
-              value={selectedRegion}
-              label="Статистички регион"
-              onChange={handleRegionChange}
+              labelId="type-select-label"
+              id="type-select"
+              value={selectedType}
+              label="Категорија"
+              onChange={handleTypeChange}
             >
-              <MenuItem value="">Сите региони</MenuItem>
-              {regions.map((region) => (
-                <MenuItem key={region} value={region}>{region}</MenuItem>
-              ))}
+              <MenuItem value="">Сите категории</MenuItem>
+              {allData
+                .map(item => item.type)
+                .filter((value, index, self) => self.indexOf(value) === index)
+                .map((type) => (
+                  <MenuItem key={type} value={type}>{type}</MenuItem>
+                ))}
             </Select>
           </FormControl>
         </Box>
@@ -145,28 +141,25 @@ const ProstorniEdiniciDetail = ({ title }) => {
       </Box>
 
       <LoadingState 
-        loading={loading} 
-        error={error}
-        onRetry={fetchData}
+        loading={isLoading} 
+        error={error?.message}
+        onRetry={refetch}
       >
         <DataDisplay
           columns={columns}
           data={paginatedData}
-          loading={loading}
+          loading={isLoading}
           page={page}
           rowsPerPage={rowsPerPage}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           totalRows={totalRows}
-          title={`${title} - ${selectedPeriod || 'Сите периоди'}`}
+          title={`Просторни единици${selectedPeriod ? ` - ${selectedPeriod}` : ''}${selectedRegion ? ` - ${selectedRegion}` : ''}${selectedType ? ` - ${selectedType}` : ''}`}
+          onViewModeChange={handleViewModeChange}
         />
       </LoadingState>
     </Box>
   );
-};
-
-ProstorniEdiniciDetail.propTypes = {
-  title: PropTypes.string.isRequired,
 };
 
 export default ProstorniEdiniciDetail; 

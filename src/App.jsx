@@ -24,6 +24,7 @@ import PrerabotuvackaIndustrijaDashboard from './pages/delovni-tendencii/prerabo
 import TrgovijaDashboard from './pages/delovni-tendencii/trgovija';
 import FunkciiShemiDashboard from './pages/zdravstveni-smetki/funkcii-shemi';
 import DavateliShemiDashboard from './pages/zdravstveni-smetki/davateli-shemi';
+import PokazeliDashboard from './pages/polovi-statistiki/pokazateli';
 
 function App() {
   const theme = useTheme();
@@ -77,7 +78,7 @@ function App() {
             <Route path="/polovi-statistiki" element={<PoloviStatistiki />} />
             <Route 
               path="/polovi-statistiki/pokazateli" 
-              element={<PoloviStatistikiDetail title="Показатели од половите статистики во Република Македонија" />} 
+              element={<PokazeliDashboard />} 
             />
             <Route 
               path="/polovi-statistiki/zrtvi-nasilstvo" 

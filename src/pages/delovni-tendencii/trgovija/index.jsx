@@ -1,59 +1,39 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Typography, Box, FormControl, InputLabel, Select, MenuItem, Collapse } from '@mui/material';
 import BackButton from '../../../components/navigation/BackButton';
 import DataDisplay from '../../../components/data-display/DataDisplay';
 import LoadingState from '../../../components/feedback/LoadingState';
-import statisticsService from '../../../services/StatisticsService';
+import { useTrgovija } from '../../../hooks/useStatistics';
 
 const TrgovijaDashboard = () => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [data, setData] = useState([]);
-  const [allData, setAllData] = useState([]);
-  const [columns, setColumns] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [totalRows, setTotalRows] = useState(0);
-  const [periods, setPeriods] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [viewMode, setViewMode] = useState('table');
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await statisticsService.getTrgovija();
+  // Use React Query hook
+  const { data: response, isLoading, error, refetch } = useTrgovija();
+  const { data: allData = [], columns = [], periods = [] } = response || {};
 
-      if (response) {
-        setColumns(response.columns);
-        setAllData(response.data);
-        setPeriods(response.periods);
-        setSelectedPeriod(response.periods[0]); // Select the most recent period by default
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setError(error.message || 'Настана грешка при вчитување на податоците');
-    } finally {
-      setLoading(false);
+  // Set initial period when data is loaded
+  useMemo(() => {
+    if (periods.length > 0 && !selectedPeriod) {
+      setSelectedPeriod(periods[0]);
     }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  }, [periods, selectedPeriod]);
 
   // Filter data by selected period
-  useEffect(() => {
+  const filteredData = useMemo(() => {
     if (viewMode === 'chart') {
-      setData(allData);
-      setTotalRows(allData.length);
-    } else if (selectedPeriod && allData.length > 0) {
-      const filteredData = allData.filter(item => item.period === selectedPeriod);
-      setData(filteredData);
-      setTotalRows(filteredData.length);
-      setPage(0); // Reset to first page when changing period
+      return allData;
     }
+    if (selectedPeriod && allData.length > 0) {
+      return allData.filter(item => item.period === selectedPeriod);
+    }
+    return allData;
   }, [selectedPeriod, allData, viewMode]);
+
+  const totalRows = filteredData.length;
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -70,26 +50,14 @@ const TrgovijaDashboard = () => {
 
   const handleViewModeChange = (newMode) => {
     setViewMode(newMode);
-    if (newMode === 'chart') {
-      // Show all data in chart view
-      setData(allData);
-      setTotalRows(allData.length);
-    } else {
-      // Reapply filters in table view
-      if (selectedPeriod) {
-        const filteredData = allData.filter(item => item.period === selectedPeriod);
-        setData(filteredData);
-        setTotalRows(filteredData.length);
-      }
-    }
   };
 
   const paginatedData = useMemo(() => {
-    return data.slice(
+    return filteredData.slice(
       page * rowsPerPage,
       page * rowsPerPage + rowsPerPage
     );
-  }, [data, page, rowsPerPage]);
+  }, [filteredData, page, rowsPerPage]);
 
   return (
     <Box>
@@ -135,14 +103,14 @@ const TrgovijaDashboard = () => {
       </Box>
 
       <LoadingState 
-        loading={loading} 
-        error={error}
-        onRetry={fetchData}
+        loading={isLoading} 
+        error={error?.message}
+        onRetry={refetch}
       >
         <DataDisplay
           columns={columns}
           data={paginatedData}
-          loading={loading}
+          loading={isLoading}
           page={page}
           rowsPerPage={rowsPerPage}
           onPageChange={handleChangePage}

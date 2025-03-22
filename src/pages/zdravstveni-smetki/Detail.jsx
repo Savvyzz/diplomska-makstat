@@ -1,63 +1,34 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Typography, Box, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import PropTypes from 'prop-types';
 import BackButton from '../../components/navigation/BackButton';
 import DataDisplay from '../../components/data-display/DataDisplay';
 import LoadingState from '../../components/feedback/LoadingState';
-import statisticsService from '../../services/StatisticsService';
-import { useLocation } from 'react-router-dom';
+import { useZdravstveniSmetki } from '../../hooks/useStatistics';
 
-const ZdravstveniSmetkiDetail = ({ title }) => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [data, setData] = useState([]);
-  const [allData, setAllData] = useState([]);
-  const [columns, setColumns] = useState([]);
+const ZdravstveniSmetkiDetail = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [totalRows, setTotalRows] = useState(0);
-  const [years, setYears] = useState([]);
   const [selectedYear, setSelectedYear] = useState('');
-  const location = useLocation();
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [viewMode, setViewMode] = useState('table');
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Determine which endpoint to use based on the current route
-      const isFunkciiDavateli = location.pathname.includes('funkcii-davateli');
-      const response = isFunkciiDavateli 
-        ? await statisticsService.getZdravstveniFunkciiDavateli()
-        : await statisticsService.getZdravstveniFunkciiShemi();
+  // Use React Query hook
+  const { data: response, isLoading, error, refetch } = useZdravstveniSmetki();
+  const { data: allData = [], columns = [], years = [], categories = [] } = response || {};
 
-      if (response) {
-        setColumns(response.columns);
-        setAllData(response.data);
-        setYears(response.years);
-        setSelectedYear(response.years[0]); // Select the most recent year by default
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setError(error.message || 'Настана грешка при вчитување на податоците');
-    } finally {
-      setLoading(false);
+  // Filter data by selected filters
+  const filteredData = useMemo(() => {
+    if (viewMode === 'chart') {
+      return allData;
     }
-  }, [location.pathname]);
+    return allData.filter(item => {
+      const yearMatch = selectedYear === '' || item.year === selectedYear;
+      const categoryMatch = selectedCategory === '' || item.function === selectedCategory;
+      return yearMatch && categoryMatch;
+    });
+  }, [selectedYear, selectedCategory, allData, viewMode]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  // Filter data by selected year
-  useEffect(() => {
-    if (selectedYear && allData.length > 0) {
-      const filteredData = allData.filter(item => item.year === selectedYear);
-      setData(filteredData);
-      setTotalRows(filteredData.length);
-      setPage(0); // Reset to first page when changing year
-    }
-  }, [selectedYear, allData]);
+  const totalRows = filteredData.length;
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -72,17 +43,25 @@ const ZdravstveniSmetkiDetail = ({ title }) => {
     setSelectedYear(event.target.value);
   };
 
+  const handleCategoryChange = (event) => {
+    setSelectedCategory(event.target.value);
+  };
+
+  const handleViewModeChange = (newMode) => {
+    setViewMode(newMode);
+  };
+
   const paginatedData = useMemo(() => {
-    return data.slice(
+    return filteredData.slice(
       page * rowsPerPage,
       page * rowsPerPage + rowsPerPage
     );
-  }, [data, page, rowsPerPage]);
+  }, [filteredData, page, rowsPerPage]);
 
   return (
     <Box>
       <Typography
-        variant="h3"
+        variant="h4"
         component="h1"
         sx={{
           fontWeight: 700,
@@ -90,9 +69,9 @@ const ZdravstveniSmetkiDetail = ({ title }) => {
           mb: 4
         }}
       >
-        {title}
+        Здравствени сметки
       </Typography>
-
+      
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between',
@@ -100,14 +79,14 @@ const ZdravstveniSmetkiDetail = ({ title }) => {
         mb: 3,
         gap: 2
       }}>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
           <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel id="year-select-label">Година</InputLabel>
+            <InputLabel id="year-select-label">Период</InputLabel>
             <Select
               labelId="year-select-label"
               id="year-select"
               value={selectedYear}
-              label="Година"
+              label="Период"
               onChange={handleYearChange}
             >
               <MenuItem value="">Сите години</MenuItem>
@@ -116,33 +95,46 @@ const ZdravstveniSmetkiDetail = ({ title }) => {
               ))}
             </Select>
           </FormControl>
+          
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel id="category-select-label">Категорија</InputLabel>
+            <Select
+              labelId="category-select-label"
+              id="category-select"
+              value={selectedCategory}
+              label="Категорија"
+              onChange={handleCategoryChange}
+            >
+              <MenuItem value="">Сите категории</MenuItem>
+              {categories.map((category) => (
+                <MenuItem key={category} value={category}>{category}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Box>
         <BackButton />
       </Box>
 
       <LoadingState 
-        loading={loading} 
-        error={error}
-        onRetry={fetchData}
+        loading={isLoading} 
+        error={error?.message}
+        onRetry={refetch}
       >
         <DataDisplay
           columns={columns}
           data={paginatedData}
-          loading={loading}
+          loading={isLoading}
           page={page}
           rowsPerPage={rowsPerPage}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           totalRows={totalRows}
-          title={`${title} - ${selectedYear || 'Сите години'}`}
+          title={`Здравствени сметки - ${selectedYear || 'Сите години'}${selectedCategory ? ` - ${selectedCategory}` : ''}`}
+          onViewModeChange={handleViewModeChange}
         />
       </LoadingState>
     </Box>
   );
-};
-
-ZdravstveniSmetkiDetail.propTypes = {
-  title: PropTypes.string.isRequired,
 };
 
 export default ZdravstveniSmetkiDetail; 

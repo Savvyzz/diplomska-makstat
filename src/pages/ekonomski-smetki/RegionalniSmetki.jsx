@@ -1,69 +1,44 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Typography, Box, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import BackButton from '../../components/navigation/BackButton';
-import DataTable from '../../components/data-display/DataTable';
+import DataDisplay from '../../components/data-display/DataDisplay';
 import LoadingState from '../../components/feedback/LoadingState';
-import statisticsService from '../../services/StatisticsService';
+import { useEkonomskiSmetkiRegionalni } from '../../hooks/useStatistics';
 
 const RegionalniSmetki = () => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [data, setData] = useState([]);
-  const [allData, setAllData] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [totalRows, setTotalRows] = useState(0);
-  const [years, setYears] = useState([]);
-  const [regions, setRegions] = useState([]);
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('');
+  const [viewMode, setViewMode] = useState('table');
 
-  // Define columns statically to ensure they're always in the correct order
-  const columns = [
-    { field: 'item', headerName: 'Ставка', numeric: false },
-    { field: 'region', headerName: 'Регион', numeric: false },
-    { field: 'year', headerName: 'Година', numeric: true },
-    { field: 'value', headerName: 'Вредност', numeric: true }
-  ];
+  // Use React Query hook
+  const { data: response, isLoading, error, refetch } = useEkonomskiSmetkiRegionalni();
+  const { data: allData = [], columns = [], years = [], regions = [] } = response || {};
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await statisticsService.getEkonomskiSmetkiRegionalni();
-
-      if (response) {
-        setAllData(response.data);
-        setYears(response.years);
-        setRegions(response.regions);
-        setSelectedYear(response.years[0]); // Select the most recent year by default
-        setSelectedRegion(response.regions[0]); // Select the first region by default
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setError(error.message || 'Настана грешка при вчитување на податоците');
-    } finally {
-      setLoading(false);
+  // Set initial selections when data is loaded
+  useMemo(() => {
+    if (years.length > 0 && !selectedYear) {
+      setSelectedYear('');
     }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  // Filter data by selected year and region
-  useEffect(() => {
-    if (selectedYear && selectedRegion && allData.length > 0) {
-      const filteredData = allData.filter(item => 
-        item.year === selectedYear && 
-        item.region === selectedRegion
-      );
-      setData(filteredData);
-      setTotalRows(filteredData.length);
-      setPage(0); // Reset to first page when changing filters
+    if (regions.length > 0 && !selectedRegion) {
+      setSelectedRegion('');
     }
-  }, [selectedYear, selectedRegion, allData]);
+  }, [years, regions, selectedYear, selectedRegion]);
+
+  // Filter data by selected filters
+  const filteredData = useMemo(() => {
+    if (viewMode === 'chart') {
+      return allData;
+    }
+    return allData.filter(item => {
+      const yearMatch = !selectedYear || item.year === selectedYear;
+      const regionMatch = !selectedRegion || item.region === selectedRegion;
+      return yearMatch && regionMatch;
+    });
+  }, [selectedYear, selectedRegion, allData, viewMode]);
+
+  const totalRows = filteredData.length;
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -82,12 +57,16 @@ const RegionalniSmetki = () => {
     setSelectedRegion(event.target.value);
   };
 
+  const handleViewModeChange = (newMode) => {
+    setViewMode(newMode);
+  };
+
   const paginatedData = useMemo(() => {
-    return data.slice(
+    return filteredData.slice(
       page * rowsPerPage,
       page * rowsPerPage + rowsPerPage
     );
-  }, [data, page, rowsPerPage]);
+  }, [filteredData, page, rowsPerPage]);
 
   return (
     <Box>
@@ -120,6 +99,7 @@ const RegionalniSmetki = () => {
               label="Период"
               onChange={handleYearChange}
             >
+              <MenuItem value="">Сите години</MenuItem>
               {years.map((year) => (
                 <MenuItem key={year} value={year}>{year}</MenuItem>
               ))}
@@ -135,6 +115,7 @@ const RegionalniSmetki = () => {
               label="Регион"
               onChange={handleRegionChange}
             >
+              <MenuItem value="">Сите региони</MenuItem>
               {regions.map((region) => (
                 <MenuItem key={region} value={region}>{region}</MenuItem>
               ))}
@@ -145,19 +126,21 @@ const RegionalniSmetki = () => {
       </Box>
 
       <LoadingState 
-        loading={loading} 
-        error={error}
-        onRetry={fetchData}
+        loading={isLoading} 
+        error={error?.message}
+        onRetry={refetch}
       >
-        <DataTable
+        <DataDisplay
           columns={columns}
           data={paginatedData}
-          loading={loading}
+          loading={isLoading}
           page={page}
           rowsPerPage={rowsPerPage}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           totalRows={totalRows}
+          title={`Регионални сметки во земјоделството - ${selectedYear || 'Сите години'}`}
+          onViewModeChange={handleViewModeChange}
         />
       </LoadingState>
     </Box>

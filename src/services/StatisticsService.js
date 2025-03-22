@@ -306,6 +306,12 @@ class StatisticsService extends BaseService {
 
     return {
       data: transformedData,
+      columns: [
+        { field: 'item', headerName: 'Категорија', numeric: false },
+        { field: 'year', headerName: 'Година', numeric: true },
+        { field: 'region', headerName: 'Регион', numeric: false },
+        { field: 'value', headerName: 'Вредност', numeric: true }
+      ],
       years: uniqueYears,
       regions: uniqueRegions,
       totalRows: transformedData.length
@@ -365,6 +371,10 @@ class StatisticsService extends BaseService {
     // Get unique years for filtering, sorted in descending order
     const uniqueYears = [...yearsWithData].sort((a, b) => b - a);
 
+    // Extract unique functions and schemes for filtering
+    const uniqueFunctions = [...new Set(transformedData.map(item => item.function))];
+    const uniqueSchemes = [...new Set(transformedData.map(item => item.scheme))];
+
     return {
       columns: [
         { field: 'function', headerName: 'Здравствена функција', numeric: false },
@@ -374,7 +384,9 @@ class StatisticsService extends BaseService {
       ],
       data: transformedData,
       totalRows: transformedData.length,
-      years: uniqueYears
+      years: uniqueYears,
+      functions: uniqueFunctions,
+      schemes: uniqueSchemes
     };
   }
 
@@ -431,6 +443,10 @@ class StatisticsService extends BaseService {
 
     // Get unique years for filtering, sorted in descending order
     const uniqueYears = [...yearsWithData].sort((a, b) => b - a);
+    
+    // Extract unique functions and providers for filtering
+    const uniqueFunctions = [...new Set(transformedData.map(item => item.function))];
+    const uniqueProviders = [...new Set(transformedData.map(item => item.provider))];
 
     return {
       columns: [
@@ -441,7 +457,10 @@ class StatisticsService extends BaseService {
       ],
       data: transformedData,
       totalRows: transformedData.length,
-      years: uniqueYears
+      years: uniqueYears,
+      categories: uniqueFunctions, // Use functions as categories
+      functions: uniqueFunctions,
+      providers: uniqueProviders
     };
   }
 
@@ -499,6 +518,10 @@ class StatisticsService extends BaseService {
     // Get unique years for filtering, sorted in descending order
     const uniqueYears = [...yearsWithData].sort((a, b) => b - a);
 
+    // Extract unique providers and schemes for filtering
+    const uniqueProviders = [...new Set(transformedData.map(item => item.provider))];
+    const uniqueSchemes = [...new Set(transformedData.map(item => item.scheme))];
+
     return {
       columns: [
         { field: 'provider', headerName: 'Давател на здравствена заштита', numeric: false },
@@ -508,7 +531,9 @@ class StatisticsService extends BaseService {
       ],
       data: transformedData,
       totalRows: transformedData.length,
-      years: uniqueYears
+      years: uniqueYears,
+      providers: uniqueProviders,
+      schemes: uniqueSchemes
     };
   }
 
@@ -569,6 +594,7 @@ class StatisticsService extends BaseService {
     // Get unique years and genders for filtering, sorted appropriately
     const uniqueYears = [...yearsWithData].sort((a, b) => b - a);
     const uniqueGenders = [...gendersWithData];
+    const uniquePokazateli = [...new Set(transformedData.map(item => item.pokazatel))];
 
     return {
       columns: [
@@ -580,7 +606,8 @@ class StatisticsService extends BaseService {
       data: transformedData,
       totalRows: transformedData.length,
       years: uniqueYears,
-      genders: uniqueGenders
+      genders: uniqueGenders,
+      categories: uniquePokazateli
     };
   }
 
@@ -711,6 +738,7 @@ class StatisticsService extends BaseService {
     // Get unique periods and regions for filtering
     const uniquePeriods = [...periodsWithData];
     const uniqueRegions = [...regionsWithData];
+    const uniqueTypes = [...new Set(transformedData.map(item => item.type))];
 
     return {
       columns: [
@@ -722,7 +750,8 @@ class StatisticsService extends BaseService {
       data: transformedData,
       totalRows: transformedData.length,
       periods: uniquePeriods,
-      regions: uniqueRegions
+      regions: uniqueRegions,
+      types: uniqueTypes
     };
   }
 }
