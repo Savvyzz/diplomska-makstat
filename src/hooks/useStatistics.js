@@ -1,6 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
-import statisticsService from '../services/StatisticsService';
+import { 
+  DelovniTendenciiService, 
+  EkonomskiSmetkiService, 
+  ZdravstveniSmetkiService, 
+  PoloviStatistikiService,
+  ProstorniEdiniciService
+} from '@services/statistics';
 
+/**
+ * Generic hook for fetching statistics data
+ * 
+ * @param {Array} queryKey - Cache key for React Query
+ * @param {Function} fetchFunction - Function to fetch data
+ * @returns {Object} - Query result with normalized data format
+ */
 export const useStatistics = (queryKey, fetchFunction) => {
   return useQuery({
     queryKey: queryKey,
@@ -40,64 +53,67 @@ export const useStatistics = (queryKey, fetchFunction) => {
   });
 };
 
-// Pre-defined query hooks for each statistic type
+// Delovni Tendencii hooks
 export const useGradeznistvo = () => {
-  return useStatistics(['gradeznistvo'], () => statisticsService.getGradeznistvo());
+  return useStatistics(['gradeznistvo'], () => DelovniTendenciiService.getGradeznistvo());
 };
 
 export const usePrerabotuvackaIndustrija = () => {
-  return useStatistics(['prerabotuvackaIndustrija'], () => statisticsService.getPrerabotuvackaIndustrija());
+  return useStatistics(['prerabotuvackaIndustrija'], () => DelovniTendenciiService.getPrerabotuvackaIndustrija());
 };
 
 export const useTrgovija = () => {
-  return useStatistics(['trgovija'], () => statisticsService.getTrgovija());
+  return useStatistics(['trgovija'], () => DelovniTendenciiService.getTrgovija());
 };
 
-// Generic hooks for detail views
-export const useZdravstveniSmetki = () => {
-  return useStatistics(['zdravstveniSmetki'], () => statisticsService.getZdravstveniFunkciiDavateli());
-};
-
-export const usePoloviStatistiki = () => {
-  return useStatistics(['poloviStatistiki'], () => statisticsService.getPoloviStatistikiPokazateli());
-};
-
-export const useProstorniEdinici = () => {
-  return useStatistics(['prostorniEdinici'], () => statisticsService.getProstorniEdiniciOpstiniNaseleniMesta());
-};
-
+// Ekonomski Smetki hooks
 export const useEkonomskiSmetkiTekovni = () => {
-  return useStatistics(['ekonomskiSmetkiTekovni'], () => statisticsService.getEkonomskiSmetkiTekovni());
+  return useStatistics(['ekonomskiSmetkiTekovni'], () => EkonomskiSmetkiService.getEkonomskiSmetkiTekovni());
 };
 
 export const useEkonomskiSmetkiPostojani = () => {
-  return useStatistics(['ekonomskiSmetkiPostojani'], () => statisticsService.getEkonomskiSmetkiPostojani());
+  return useStatistics(['ekonomskiSmetkiPostojani'], () => EkonomskiSmetkiService.getEkonomskiSmetkiPostojani());
 };
 
 export const useEkonomskiSmetkiRegionalni = () => {
-  return useStatistics(['ekonomskiSmetkiRegionalni'], () => statisticsService.getEkonomskiSmetkiRegionalni());
+  return useStatistics(['ekonomskiSmetkiRegionalni'], () => EkonomskiSmetkiService.getEkonomskiSmetkiRegionalni());
+};
+
+// Zdravstveni Smetki hooks
+export const useZdravstveniSmetki = () => {
+  return useStatistics(['zdravstveniSmetki'], () => ZdravstveniSmetkiService.getZdravstveniFunkciiDavateli());
 };
 
 export const useZdravstveniFunkciiShemi = () => {
-  return useStatistics(['zdravstveniFunkciiShemi'], () => statisticsService.getZdravstveniFunkciiShemi());
+  return useStatistics(['zdravstveniFunkciiShemi'], () => ZdravstveniSmetkiService.getZdravstveniFunkciiShemi());
 };
 
 export const useZdravstveniFunkciiDavateli = () => {
-  return useStatistics(['zdravstveniFunkciiDavateli'], () => statisticsService.getZdravstveniFunkciiDavateli());
+  return useStatistics(['zdravstveniFunkciiDavateli'], () => ZdravstveniSmetkiService.getZdravstveniFunkciiDavateli());
 };
 
 export const useZdravstveniDavateliShemi = () => {
-  return useStatistics(['zdravstveniDavateliShemi'], () => statisticsService.getZdravstveniDavateliShemi());
+  return useStatistics(['zdravstveniDavateliShemi'], () => ZdravstveniSmetkiService.getZdravstveniDavateliShemi());
+};
+
+// Polovi Statistiki hooks
+export const usePoloviStatistiki = () => {
+  return useStatistics(['poloviStatistiki'], () => PoloviStatistikiService.getPoloviStatistikiPokazateli());
 };
 
 export const usePoloviStatistikiPokazateli = () => {
-  return useStatistics(['poloviStatistikiPokazateli'], () => statisticsService.getPoloviStatistikiPokazateli());
+  return useStatistics(['poloviStatistikiPokazateli'], () => PoloviStatistikiService.getPoloviStatistikiPokazateli());
 };
 
 export const usePoloviStatistikiZrtviNasilstvo = () => {
-  return useStatistics(['poloviStatistikiZrtviNasilstvo'], () => statisticsService.getPoloviStatistikiZrtviNasilstvo());
+  return useStatistics(['poloviStatistikiZrtviNasilstvo'], () => PoloviStatistikiService.getPoloviStatistikiZrtviNasilstvo());
+};
+
+// Prostorni Edinici hooks
+export const useProstorniEdinici = () => {
+  return useStatistics(['prostorniEdinici'], () => ProstorniEdiniciService.getProstorniEdiniciOpstiniNaseleniMesta());
 };
 
 export const useProstorniEdiniciOpstiniNaseleniMesta = () => {
-  return useStatistics(['prostorniEdiniciOpstiniNaseleniMesta'], () => statisticsService.getProstorniEdiniciOpstiniNaseleniMesta());
+  return useStatistics(['prostorniEdiniciOpstiniNaseleniMesta'], () => ProstorniEdiniciService.getProstorniEdiniciOpstiniNaseleniMesta());
 }; 
